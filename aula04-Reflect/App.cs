@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 
 class A {}
 class B : A {}
@@ -13,6 +14,8 @@ class App {
         PrintBaseTypes("Ola");
         PrintBaseTypes(19);
         PrintBaseTypes(new C());
+        PrintBaseTypes(new System.IO.DirectoryInfo("."));
+
         PrintMembers(new C());
         PrintMethods(new C());
         PrintFields(new C());
@@ -42,9 +45,13 @@ class App {
         Type t = obj.GetType();
         do {
             Console.Write(t.Name + " ");
+            PrintInterfaces(t);
             t = t.BaseType;
         // } while( t != typeOfObject);
         } while( t != typeof(object));
         Console.WriteLine();
+    }
+    public static void PrintInterfaces(Type t) {
+        
     }
 }
