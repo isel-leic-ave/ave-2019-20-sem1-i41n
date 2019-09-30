@@ -21,46 +21,28 @@ public class Student {
 
 }
 
-class Point{
-    public readonly int x, y;
+class Point{    
     public Point(int x, int y) {
-        this.x = x;
-        this.y = y;
+        this.X = x;
+        this.Y = y;
     }
+    
+    public int X { get; set; } // Auto-implemented properties
+    public int Y { get; set; }
+    
     public double Module{
         get{
-            return Math.Sqrt(x*x + y*y);
+            return Math.Sqrt(X*X + Y*Y);
         }
     }
     
-}
-
-class Account {
-    public static readonly int CODE = 4342;
-    public long balance;
-    public Account(long b) { balance = b; }
 }
 
 class App {
     static void Main(){
         Point p = new Point(7, 9);
         Student s = new Student(154134, "Ze Manel", 5243, "ze");
-        
-        Student[] classroom = {
-            new Student(154134, "Ze Manel", 5243, "ze"),
-            new Student(765864, "Maria El", 4677, "ma"),
-            new Student(456757, "Antonias", 3153, "an"),
-        };
-        
-        Account a = new Account(1300);
-        Console.WriteLine(p);
-        Console.WriteLine(s);
-        Console.WriteLine(a);
-        
-        Logger.Log(p);
-        Logger.Log(s);
-        Logger.Log(a);
-        Logger.Log(classroom);
+
     }
 }
 

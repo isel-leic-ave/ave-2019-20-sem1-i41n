@@ -23,20 +23,33 @@ public class GetterMethod : IGetter{
         return m.Invoke(target, new object[0]);
     }
 }
+public class GetterProperty : IGetter{
+    PropertyInfo p;
+    public GetterProperty(PropertyInfo p) {this.p = p;}
+    public string GetName() { return p.Name; }
+    public object GetValue(object target) { 
+        return p.GetValue(target);
+    }
+}
 
 public class Logger {
 
-    public static void Log(object o) {
+    List<MethodInfo> configuration = new List<MethodInfo>();
+
+    public void Log(object o) {
         Type t = o.GetType();
         if(t.IsArray) LogArray((IEnumerable) o);
         else {
-            var fs = InitFields(t ); // 1x
-            var getters = InitMethods(t ); // 1x
-            getters.AddRange(fs);
-            LogObject(o, getters);
+            LogObject(o, InitGetters(t));
         }
     }
-    
+    IEnumerable<IGetter> InitGetters(Type t) {
+        var getters = new List<IGetter>();
+        foreach(MethodInfo m in configuration){
+            getters.AddRange((IEnumerable<IGetter>)m.Invoke(null, new object[]{t}));
+        }
+        return getters;
+    }
     public static IEnumerable<IGetter> InitFields(Type t) {
         List<IGetter> l = new List<IGetter>();
         foreach(FieldInfo m in t.GetFields()) {
@@ -44,7 +57,7 @@ public class Logger {
         }
         return l;
     }
-    public static List<IGetter> InitMethods(Type t) {
+    public static IEnumerable<IGetter> InitMethods(Type t) {
         List<IGetter> l = new List<IGetter>();
         foreach(MethodInfo m in t.GetMethods()) {
             if(m.ReturnType != typeof(void) && m.GetParameters().Length == 0) {
@@ -53,12 +66,16 @@ public class Logger {
         }
         return l;
     }
-    
-    public static void LogArray(IEnumerable o) {
+    public static IEnumerable<IGetter> InitProperties(Type t) {
+        List<IGetter> l = new List<IGetter>();
+        foreach(PropertyInfo p in t.GetProperties()) {
+            l.Add(new GetterProperty(p));
+        }
+        return l;
+    }
+    public void LogArray(IEnumerable o) {
         Type elemType = o.GetType().GetElementType(); // Tipo dos elementos do Array
-        var fs = InitFields(elemType ); // 1x
-        var getters = InitMethods(elemType ); // 1x
-        getters.AddRange(fs);
+        var getters = InitGetters(elemType);
         Console.WriteLine("Array of " + elemType.Name + "[");
         foreach(object item in o) LogObject(item, getters); // * 
         Console.WriteLine("]");
@@ -72,5 +89,19 @@ public class Logger {
             Console.Write(g.GetValue(o) + ", ");
         }
         Console.WriteLine("}");
+    }
+    
+    static readonly MethodInfo INIT_FIELDS = typeof(Logger).GetMethod("InitFields");
+    static readonly MethodInfo INIT_METHODS = typeof(Logger).GetMethod("InitMethods");
+    static readonly MethodInfo INIT_PROPERTIES = typeof(Logger).GetMethod("InitProperties");
+    
+    public void ReadFields(){
+        configuration.Add(INIT_FIELDS);
+    }
+    public void ReadMethods(){
+        configuration.Add(INIT_METHODS);
+    }
+    public void ReadProperties(){
+        configuration.Add(INIT_PROPERTIES);
     }
 }
