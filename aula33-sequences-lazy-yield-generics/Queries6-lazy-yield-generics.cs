@@ -1,15 +1,11 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Text;
 using System.IO;
 
-delegate bool Predicate(object item);
-
-delegate object Function(object item);
-
-
-class App {
-    static IEnumerable Lines(string path)
+static class App {
+    static IEnumerable<String> Lines(string path)
     { 
         using(StreamReader file = new StreamReader(path)) // <=> try-with resources do Java >= 7
         {
@@ -21,23 +17,23 @@ class App {
         }
     }
      
-    static IEnumerable Convert(IEnumerable src, Function conv) {
-        foreach(object o in src) {
+    static IEnumerable<R> Convert<T, R>(this IEnumerable<T> src, Func<T,R> conv) {
+        foreach(T o in src) {
             yield return conv(o); // <=> conv.Invoke(o)
         }
     }        
-    static IEnumerable Filter(IEnumerable stds, Predicate p) {
-        foreach(object item in stds) {
+    static IEnumerable<T> Filter<T>(this IEnumerable<T> stds, Predicate<T> p) {
+        foreach(T item in stds) {
             if(p(item)) // <=> p.Invoke(item)
                 yield return item;
         }
     }
-    static IEnumerable Skip(IEnumerable src, int nr) { 
+    static IEnumerable<T> Skip<T>(this IEnumerable<T> src, int nr) { 
         // To Do...
         throw new Exception("To do... TPC");
     }
-    static IEnumerable Take(IEnumerable src, int limit) { // <=> Top, ou limit(), ...
-        foreach(object item in src) {
+    static IEnumerable<T> Take<T>(this IEnumerable<T> src, int limit) { // <=> Top, ou limit(), ...
+        foreach(T item in src) {
             if(limit-- > 0) 
                 yield return item;
             else break;
@@ -46,40 +42,16 @@ class App {
     
     static void Main()
     {
-        int count = 0;
-        IEnumerable names = 
-            Take(
-                Convert(
-                    Filter(
-                        Filter(
-                            Convert(
-                                Lines("i41N.txt"),
-                                item => { 
-                                    count++;
-                                    return Student.Parse(item.ToString());
-                                }),
-                            item => { 
-                                    count++;
-                                    return((Student) item).nr > 42000;
-                            }),
-                        item => { 
-                            count++;
-                            // Console.WriteLine("Filter..." + item); 
-                            return ((Student) item).name.StartsWith("D");
-                        }),
-                    item => { 
-                        count++;
-                        // Console.WriteLine("Convert..." + item); 
-                        return ((Student) item).name.Split(' ')[0];
-                    }),
-                7);
+        IEnumerable<String> names = Lines("i41N.txt")
+            .Convert(item => Student.Parse(item.ToString()))
+            .Filter(std => std.nr > 42000)
+            .Filter(std => std.name.StartsWith("D"))
+            .Convert(std => std.name.Split(' ')[0])
+            .Take(7);
                         
         Console.ReadLine();
-        foreach(object l in names)
-            Console.WriteLine(l);
-            
-        Console.WriteLine(count);
-            
+        foreach(string l in names)
+            Console.WriteLine(l);       
     }
 }
 
